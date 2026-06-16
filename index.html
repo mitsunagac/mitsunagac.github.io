@@ -220,10 +220,7 @@
     }
 
     .hero-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.02fr) minmax(360px, 0.98fr);
-      align-items: center;
-      gap: 3rem;
+      max-width: 760px;
     }
 
     .eyebrow {
@@ -326,34 +323,6 @@
       color: var(--ink);
       font-weight: 800;
       line-height: 1.45;
-    }
-
-    .traffic-visual {
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: #fbfcfb;
-      box-shadow: var(--shadow);
-    }
-
-    .visual-bar {
-      min-height: 54px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 1rem;
-      border-bottom: 1px solid var(--line);
-      padding: 0.8rem 1rem;
-      color: var(--muted);
-      font-size: 0.82rem;
-      font-weight: 800;
-    }
-
-    #trafficCanvas {
-      width: 100%;
-      aspect-ratio: 16 / 11;
-      min-height: 320px;
-      background: #f8faf8;
     }
 
     .section-head {
@@ -663,7 +632,6 @@
         align-items: center;
       }
 
-      .hero-grid,
       .profile-grid,
       .research-layout,
       .contact-layout {
@@ -673,10 +641,6 @@
       .method-steps,
       .project-grid {
         grid-template-columns: 1fr;
-      }
-
-      .hero-grid {
-        gap: 2rem;
       }
 
       h1 {
@@ -710,10 +674,6 @@
 
       h1 {
         font-size: 2.1rem;
-      }
-
-      #trafficCanvas {
-        min-height: 260px;
       }
 
       .brand-text small {
@@ -788,15 +748,6 @@
           </ul>
         </div>
 
-        <figure class="traffic-visual" aria-labelledby="traffic-visual-title">
-          <div class="visual-bar">
-            <span>SUMO × GCN</span>
-          </div>
-          <canvas id="trafficCanvas" width="720" height="495" aria-hidden="true"></canvas>
-          <figcaption class="visually-hidden" id="traffic-visual-title">
-            交差点ネットワーク、信号、車両の流れ、赤信号待ち台数予測を表す模式図。
-          </figcaption>
-        </figure>
       </div>
     </section>
 
@@ -1104,223 +1055,6 @@
     }
 
     document.getElementById("year").textContent = new Date().getFullYear();
-
-    const canvas = document.getElementById("trafficCanvas");
-    const ctx = canvas.getContext("2d");
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let animationFrame;
-    let time = 0;
-
-    const nodes = [
-      { id: "A", x: 0.16, y: 0.28, signal: "green" },
-      { id: "B", x: 0.38, y: 0.22, signal: "red" },
-      { id: "J", x: 0.58, y: 0.45, signal: "red", focus: true },
-      { id: "C", x: 0.78, y: 0.30, signal: "green" },
-      { id: "D", x: 0.30, y: 0.68, signal: "green" },
-      { id: "E", x: 0.55, y: 0.76, signal: "red" },
-      { id: "F", x: 0.82, y: 0.68, signal: "green" }
-    ];
-
-    const edges = [
-      ["A", "B"], ["B", "J"], ["J", "C"], ["A", "D"], ["D", "E"],
-      ["E", "F"], ["J", "E"], ["C", "F"], ["B", "D"]
-    ];
-
-    const cars = [
-      { edge: ["A", "B"], offset: 0.12, color: "#2d6a63" },
-      { edge: ["B", "J"], offset: 0.35, color: "#9d5b3f" },
-      { edge: ["J", "C"], offset: 0.64, color: "#357b64" },
-      { edge: ["D", "E"], offset: 0.08, color: "#2d6a63" },
-      { edge: ["J", "E"], offset: 0.82, color: "#b64b45" },
-      { edge: ["E", "F"], offset: 0.44, color: "#9d5b3f" }
-    ];
-
-    function resizeCanvas() {
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = Math.max(1, Math.floor(rect.width * ratio));
-      canvas.height = Math.max(1, Math.floor(rect.height * ratio));
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    }
-
-    function point(node, width, height) {
-      return { x: node.x * width, y: node.y * height };
-    }
-
-    function nodeById(id) {
-      return nodes.find((node) => node.id === id);
-    }
-
-    function roundedRect(x, y, width, height, radius) {
-      const r = Math.min(radius, Math.abs(width) / 2, Math.abs(height) / 2);
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + width - r, y);
-      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
-      ctx.lineTo(x + width, y + height - r);
-      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-      ctx.lineTo(x + r, y + height);
-      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
-    }
-
-    function drawRoad(from, to, width, height) {
-      const a = point(nodeById(from), width, height);
-      const b = point(nodeById(to), width, height);
-      ctx.lineCap = "round";
-      ctx.strokeStyle = "#d4ded8";
-      ctx.lineWidth = 15;
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 2;
-      ctx.setLineDash([10, 12]);
-      ctx.beginPath();
-      ctx.moveTo(a.x, a.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-
-    function drawCar(car, width, height) {
-      const a = point(nodeById(car.edge[0]), width, height);
-      const b = point(nodeById(car.edge[1]), width, height);
-      const progress = reduceMotion.matches ? car.offset : (time * 0.00008 + car.offset) % 1;
-      const x = a.x + (b.x - a.x) * progress;
-      const y = a.y + (b.y - a.y) * progress;
-      const angle = Math.atan2(b.y - a.y, b.x - a.x);
-
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(angle);
-      ctx.fillStyle = car.color;
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 2;
-      roundedRect(-8, -5, 16, 10, 4);
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    function drawSignal(node, width, height) {
-      const p = point(node, width, height);
-      ctx.fillStyle = node.signal === "red" ? "#b64b45" : "#357b64";
-      ctx.beginPath();
-      ctx.arc(p.x + 19, p.y - 18, 6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    function drawNode(node, width, height) {
-      const p = point(node, width, height);
-      if (node.focus) {
-        ctx.fillStyle = "rgba(45, 106, 99, 0.12)";
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 42, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = "#2d6a63";
-        ctx.lineWidth = 2;
-        ctx.setLineDash([7, 7]);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, 34, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-
-      ctx.fillStyle = "#ffffff";
-      ctx.strokeStyle = node.focus ? "#174d48" : "#91a49b";
-      ctx.lineWidth = node.focus ? 3 : 2;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, node.focus ? 17 : 14, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = node.focus ? "#174d48" : "#52625d";
-      ctx.font = "700 13px system-ui, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(node.id, p.x, p.y + 0.5);
-      drawSignal(node, width, height);
-    }
-
-    function drawPrediction(width, height) {
-      const panelX = width * 0.08;
-      const panelY = height * 0.79;
-      const panelW = Math.min(280, width * 0.45);
-      const panelH = 66;
-
-      ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
-      ctx.strokeStyle = "#d7e0da";
-      ctx.lineWidth = 1;
-      roundedRect(panelX, panelY, panelW, panelH, 8);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = "#52625d";
-      ctx.font = "700 12px system-ui, sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText("Predicted red-light queue", panelX + 14, panelY + 21);
-
-      const values = [1.08, 1.19];
-      const labels = ["First half", "Second half"];
-      values.forEach((value, index) => {
-        const x = panelX + 14;
-        const y = panelY + 36 + index * 16;
-        ctx.fillStyle = index === 0 ? "#2d6a63" : "#9d5b3f";
-        ctx.fillRect(x, y, value * 54, 7);
-        ctx.fillStyle = "#1f2926";
-        ctx.font = "700 11px system-ui, sans-serif";
-        ctx.fillText(labels[index] + " RMSE " + value.toFixed(2), x + 72, y + 6);
-      });
-    }
-
-    function drawFrame(timestamp = 0) {
-      time = timestamp;
-      const rect = canvas.getBoundingClientRect();
-      const width = rect.width;
-      const height = rect.height;
-
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = "#f8faf8";
-      ctx.fillRect(0, 0, width, height);
-
-      ctx.fillStyle = "#eef3ef";
-      for (let i = 0; i < 5; i += 1) {
-        ctx.fillRect(width * (0.1 + i * 0.18), height * 0.08, 1, height * 0.72);
-      }
-      for (let i = 0; i < 4; i += 1) {
-        ctx.fillRect(width * 0.08, height * (0.16 + i * 0.19), width * 0.82, 1);
-      }
-
-      edges.forEach((edge) => drawRoad(edge[0], edge[1], width, height));
-      cars.forEach((car) => drawCar(car, width, height));
-      nodes.forEach((node) => drawNode(node, width, height));
-      drawPrediction(width, height);
-
-      if (!reduceMotion.matches) {
-        animationFrame = requestAnimationFrame(drawFrame);
-      }
-    }
-
-    function startCanvas() {
-      cancelAnimationFrame(animationFrame);
-      resizeCanvas();
-      drawFrame(0);
-      if (!reduceMotion.matches) {
-        animationFrame = requestAnimationFrame(drawFrame);
-      }
-    }
-
-    startCanvas();
-    window.addEventListener("resize", startCanvas);
-    reduceMotion.addEventListener("change", startCanvas);
   </script>
 </body>
 </html>

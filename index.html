@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="満永匠翔の研究ポートフォリオ。グラフ畳み込みネットワークと交通シミュレーションを用いた赤信号待ち台数予測・信号制御の研究を紹介します。">
+  <title>満永 匠翔 | Research Portfolio</title>
+  <style>
+    :root {
+      --bg: #f5f7f4;
+      --surface: #ffffff;
+      --surface-soft: #eef3ef;
+      --ink: #1f2926;
+      --muted: #52625d;
+      --line: #d7e0da;
+      --accent: #2d6a63;
+      --accent-dark: #174d48;
+      --accent-soft: #dcece7;
+      --warm: #9d5b3f;
+      --signal-red: #b64b45;
+      --signal-green: #357b64;
+      --focus: #8257c2;
+      --shadow: 0 18px 45px rgba(31, 41, 38, 0.08);
+      --radius: 8px;
+      --max: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family:
+        "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, system-ui,
+        -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.75;
+      letter-spacing: 0;
+    }
+
+    body.no-scroll {
+      overflow: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration-thickness: 0.08em;
+      text-underline-offset: 0.18em;
+    }
+
+    img,
+    canvas {
+      max-width: 100%;
+      display: block;
+    }
+
+    figure {
+      margin: 0;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 4px;
+    }
+
+    .skip-link {
+      position: fixed;
+      left: 1rem;
+      top: 1rem;
+      z-index: 100;
+      transform: translateY(-150%);
+      border-radius: var(--radius);
+      background: var(--ink);
+      color: #fff;
+      padding: 0.65rem 0.9rem;
+      font-weight: 700;
+    }
+
+    .skip-link:focus {
+      transform: translateY(0);
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1px solid rgba(215, 224, 218, 0.9);
+      background: rgba(245, 247, 244, 0.94);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-shell {
+      width: min(100% - 2rem, var(--max));
+      min-height: 72px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--accent-dark);
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 0.95rem;
+      line-height: 1;
+      box-shadow: 0 8px 20px rgba(31, 41, 38, 0.06);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+
+    .brand-text small {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .nav-toggle {
+      display: none;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .nav-toggle span,
+    .nav-toggle::before,
+    .nav-toggle::after {
+      content: "";
+      display: block;
+      width: 20px;
+      height: 2px;
+      margin: 5px auto;
+      background: currentColor;
+      transition: transform 160ms ease, opacity 160ms ease;
+    }
+
+    .nav-toggle[aria-expanded="true"] span {
+      opacity: 0;
+    }
+
+    .nav-toggle[aria-expanded="true"]::before {
+      transform: translateY(7px) rotate(45deg);
+    }
+
+    .nav-toggle[aria-expanded="true"]::after {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    .site-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .site-nav a {
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 700;
+      padding: 0.55rem 0.75rem;
+      text-decoration: none;
+    }
+
+    .site-nav a:hover,
+    .site-nav a[aria-current="true"] {
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+    }
+
+    main {
+      overflow: hidden;
+    }
+
+    .section {
+      padding: 5.5rem 0;
+    }
+
+    .section:nth-of-type(even) {
+      background: var(--surface);
+    }
+
+    .container {
+      width: min(100% - 2rem, var(--max));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 5rem 0 4rem;
+      background: var(--surface-soft);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(360px, 0.98fr);
+      align-items: center;
+      gap: 3rem;
+    }
+
+    .eyebrow {
+      margin: 0 0 1rem;
+      color: var(--warm);
+      font-size: 0.84rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 3.35rem;
+    }
+
+    h2 {
+      font-size: 2.2rem;
+    }
+
+    h3 {
+      font-size: 1.2rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .lead {
+      max-width: 680px;
+      margin-top: 1.1rem;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+      margin-top: 1.8rem;
+    }
+
+    .button {
+      display: inline-flex;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      padding: 0.72rem 1rem;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .button.primary {
+      background: var(--accent-dark);
+      color: #fff;
+    }
+
+    .button.secondary {
+      border-color: var(--line);
+      background: var(--surface);
+      color: var(--accent-dark);
+    }
+
+    .quick-facts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin: 2rem 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .quick-facts li {
+      min-height: 96px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.78);
+      padding: 0.85rem;
+    }
+
+    .fact-label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .fact-value {
+      display: block;
+      margin-top: 0.25rem;
+      color: var(--ink);
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .traffic-visual {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfb;
+      box-shadow: var(--shadow);
+    }
+
+    .visual-bar {
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      border-bottom: 1px solid var(--line);
+      padding: 0.8rem 1rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .visual-bar strong {
+      color: var(--ink);
+      font-size: 0.95rem;
+    }
+
+    #trafficCanvas {
+      width: 100%;
+      aspect-ratio: 16 / 11;
+      min-height: 320px;
+      background: #f8faf8;
+    }
+
+    .section-head {
+      max-width: 780px;
+      margin-bottom: 2rem;
+    }
+
+    .section-head p {
+      margin-top: 0.75rem;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .profile-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 1.35rem;
+      box-shadow: 0 14px 34px rgba(31, 41, 38, 0.05);
+    }
+
+    .profile-panel h3 {
+      margin-bottom: 1rem;
+    }
+
+    .info-list {
+      display: grid;
+      gap: 0.8rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .info-list li {
+      display: grid;
+      grid-template-columns: 112px 1fr;
+      gap: 0.9rem;
+      border-top: 1px solid var(--line);
+      padding-top: 0.8rem;
+    }
+
+    .info-list li:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .info-list span {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+
+    .profile-copy {
+      color: var(--muted);
+    }
+
+    .profile-copy p + p {
+      margin-top: 1rem;
+    }
+
+    .research-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .research-copy {
+      display: grid;
+      gap: 1rem;
+      color: var(--muted);
+    }
+
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: var(--surface-soft);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 1rem 1.1rem;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 1rem;
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--accent-dark);
+      font-size: 1.55rem;
+      line-height: 1.2;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 0.3rem;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .method-steps,
+    .project-grid,
+    .skill-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .method-steps {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 2rem;
+    }
+
+    .step,
+    .project-card,
+    .skill-card,
+    .publication-card,
+    .contact-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 1.25rem;
+    }
+
+    .step-number {
+      display: inline-grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .step h3,
+    .project-card h3,
+    .skill-card h3 {
+      margin-top: 0.8rem;
+    }
+
+    .step p,
+    .project-card p,
+    .skill-card p,
+    .publication-card p,
+    .contact-card p {
+      margin-top: 0.6rem;
+      color: var(--muted);
+    }
+
+    .project-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 1rem;
+    }
+
+    .tag {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-soft);
+      color: var(--accent-dark);
+      padding: 0.28rem 0.55rem;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .skill-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .skill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin: 1rem 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .skill-list li {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      padding: 0.42rem 0.6rem;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .publication-card {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    .pub-kind {
+      display: inline-flex;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius);
+      background: var(--ink);
+      color: #fff;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.84rem;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .pub-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.9rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .contact-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .contact-card a {
+      display: inline-flex;
+      align-items: center;
+      margin-top: 0.8rem;
+      color: var(--accent-dark);
+      font-weight: 900;
+    }
+
+    .site-footer {
+      border-top: 1px solid var(--line);
+      padding: 2rem 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .footer-inner {
+      width: min(100% - 2rem, var(--max));
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.8rem;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      clip-path: inset(50%);
+    }
+
+    @media (max-width: 920px) {
+      .nav-toggle {
+        display: block;
+      }
+
+      .site-nav {
+        position: fixed;
+        inset: 72px 0 auto 0;
+        display: grid;
+        gap: 0;
+        border-bottom: 1px solid var(--line);
+        background: var(--surface);
+        padding: 0.8rem 1rem 1rem;
+        box-shadow: 0 18px 28px rgba(31, 41, 38, 0.1);
+        transform: translateY(-120%);
+        transition: transform 180ms ease;
+      }
+
+      .site-nav.is-open {
+        transform: translateY(0);
+      }
+
+      .site-nav a {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+      }
+
+      .hero-grid,
+      .profile-grid,
+      .research-layout,
+      .contact-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .method-steps,
+      .project-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-grid {
+        gap: 2rem;
+      }
+
+      h1 {
+        font-size: 2.55rem;
+      }
+
+      h2 {
+        font-size: 1.85rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .section {
+        padding: 4rem 0;
+      }
+
+      .hero {
+        padding-top: 3.2rem;
+      }
+
+      .quick-facts,
+      .skill-grid,
+      .publication-card {
+        grid-template-columns: 1fr;
+      }
+
+      .info-list li {
+        grid-template-columns: 1fr;
+        gap: 0.2rem;
+      }
+
+      h1 {
+        font-size: 2.1rem;
+      }
+
+      #trafficCanvas {
+        min-height: 260px;
+      }
+
+      .brand-text small {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">本文へスキップ</a>
+
+  <header class="site-header">
+    <div class="nav-shell">
+      <a class="brand" href="#profile" aria-label="満永匠翔のプロフィールへ">
+        <span class="brand-mark" aria-hidden="true">TM</span>
+        <span class="brand-text">
+          満永 匠翔
+          <small>Research Portfolio</small>
+        </span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="メニューを開く">
+        <span></span>
+      </button>
+      <nav class="site-nav" id="primary-nav" aria-label="主要セクション">
+        <a href="#profile">Profile</a>
+        <a href="#research">Research</a>
+        <a href="#projects">Projects</a>
+        <a href="#skills">Skills</a>
+        <a href="#publications">Publications</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container hero-grid">
+        <div>
+          <p class="eyebrow">Master's Student / Traffic AI / Simulation</p>
+          <h1 id="hero-title">満永 匠翔</h1>
+          <p class="lead">
+            交通流を読み、信号制御を設計する。グラフ畳み込みネットワークと交通流シミュレーションを用いて、
+            赤信号待ち台数を予測し、都市交差点の遅れ時間を減らす信号制御を研究しています。
+          </p>
+          <div class="hero-actions" aria-label="ページ内リンク">
+            <a class="button primary" href="#research">Research</a>
+            <a class="button secondary" href="#contact">Contact</a>
+          </div>
+          <ul class="quick-facts" aria-label="研究ハイライト">
+            <li>
+              <span class="fact-label">Focus</span>
+              <span class="fact-value">GCNによる赤信号待ち台数予測</span>
+            </li>
+            <li>
+              <span class="fact-label">Result</span>
+              <span class="fact-value">RMSE 1.08 / 1.19 台</span>
+            </li>
+            <li>
+              <span class="fact-label">Field</span>
+              <span class="fact-value">交通信号制御・SUMO</span>
+            </li>
+          </ul>
+        </div>
+
+        <figure class="traffic-visual" aria-labelledby="traffic-visual-title">
+          <div class="visual-bar">
+            <strong>Showa-cho Traffic Model</strong>
+            <span>SUMO × GCN</span>
+          </div>
+          <canvas id="trafficCanvas" width="720" height="495" aria-hidden="true"></canvas>
+          <figcaption class="visually-hidden" id="traffic-visual-title">
+            交差点ネットワーク、信号、車両の流れ、赤信号待ち台数予測を表す模式図。
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section" id="profile" aria-labelledby="profile-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="profile-title">Profile</h2>
+          <p>交通シミュレーションと機械学習を接続し、都市交通の制御に応用する研究に取り組んでいます。</p>
+        </div>
+        <div class="profile-grid">
+          <aside class="profile-panel" aria-label="基本情報">
+            <h3>満永 匠翔 / Takuto Mitsunaga</h3>
+            <ul class="info-list">
+              <li>
+                <span>Position</span>
+                <strong>修士課程1年</strong>
+              </li>
+              <li>
+                <span>Affiliation</span>
+                <strong>日本大学大学院 理工学研究科</strong>
+              </li>
+              <li>
+                <span>Laboratory</span>
+                <strong>高橋研究室</strong>
+              </li>
+              <li>
+                <span>Theme</span>
+                <strong>交通信号制御とグラフニューラルネットワーク</strong>
+              </li>
+            </ul>
+          </aside>
+          <div class="profile-copy">
+            <p>
+              学部研究では、富山県昭和町の交差点群をSUMO上に再現し、赤信号時に発生する待ち台数を
+              GCNで予測する手法を検証しました。予測結果を信号制御に組み込み、一般的なギャップ感応制御との
+              比較から、遅れ時間の削減と周辺交差点への影響を分析しています。
+            </p>
+            <p>
+              現在は、単一交差点の最適化にとどまらず、従道路側や周辺交差点を含めた街全体の制御へ拡張すること、
+              そして異なる交通環境でも機能する予測モデルの一般化を目標にしています。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="research" aria-labelledby="research-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="research-title">Research</h2>
+          <p>研究テーマは「グラフ畳み込みネットワークを用いた赤信号待ち台数予測による信号制御手法」です。</p>
+        </div>
+
+        <div class="research-layout">
+          <div class="research-copy">
+            <p class="callout">
+              交通需要に応じた信号制御を実現するため、赤信号時間を前半・後半に分けて待ち台数を予測し、
+              到着する車群のタイミングを考慮した青時間制御を行います。
+            </p>
+            <p>
+              研究では、Cities:Skylinesを用いた先行研究の街モデルを、車両挙動を明示的に扱える
+              Simulation of Urban MObility（SUMO）上で再現しました。信号サイクル長は120秒、
+              主道路側の青時間スプリットは60%、従道路側は30%とし、オフセットは「す・ムーズくん2」によって
+              最適化しています。
+            </p>
+            <p>
+              予測モデルは5層のグラフ畳み込み層と2層の出力層で構成し、赤信号前半・後半の停車台数を同時に出力します。
+              145日分の学習データ、5日分の検証データ、1日分のテストデータを用い、RMSEで予測精度を評価しました。
+            </p>
+            <p>
+              学習済みGCNを用いたリアルタイム制御では、予測した待ち台数に応じて青時間を1台あたり2秒、
+              最大±10秒の範囲で調整しました。その結果、提案手法はギャップ感応制御と比較して、
+              待ち台数と遅れ時間の削減効果が高く、他交差点への影響も比較的小さい可能性を示しました。
+            </p>
+          </div>
+
+          <div class="metric-grid" aria-label="研究指標">
+            <div class="metric">
+              <strong>192,850</strong>
+              <span>学習サンプル数</span>
+            </div>
+            <div class="metric">
+              <strong>1.08 台</strong>
+              <span>赤信号前半のRMSE</span>
+            </div>
+            <div class="metric">
+              <strong>1.19 台</strong>
+              <span>赤信号後半のRMSE</span>
+            </div>
+            <div class="metric">
+              <strong>±10 秒</strong>
+              <span>提案制御の青時間調整範囲</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="method-steps" aria-label="研究プロセス">
+          <article class="step">
+            <span class="step-number" aria-hidden="true">1</span>
+            <h3>交通環境の再現</h3>
+            <p>富山県昭和町の車線数、交差点間距離、流入交通量をSUMO上に再現し、現実の交通量に即したモデルを構築。</p>
+          </article>
+          <article class="step">
+            <span class="step-number" aria-hidden="true">2</span>
+            <h3>GCNによる予測</h3>
+            <p>道路構造をグラフとして扱い、赤信号時間の前半・後半それぞれの待ち台数を同時に予測。</p>
+          </article>
+          <article class="step">
+            <span class="step-number" aria-hidden="true">3</span>
+            <h3>信号制御の検証</h3>
+            <p>予測値に基づき青時間を制御し、待ち台数と遅れ時間をギャップ感応制御と比較。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="projects" aria-labelledby="projects-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="projects-title">Projects</h2>
+          <p>研究テーマを構成する実装・検証プロジェクトです。</p>
+        </div>
+        <div class="project-grid">
+          <article class="project-card">
+            <h3>Red Light Queue Prediction</h3>
+            <p>GCNを用いて、赤信号時の待ち台数を赤時間の前半・後半に分けて予測するモデルを設計しました。</p>
+            <div class="tag-row" aria-label="関連技術">
+              <span class="tag">GCN</span>
+              <span class="tag">RMSE</span>
+              <span class="tag">Traffic Data</span>
+            </div>
+          </article>
+          <article class="project-card">
+            <h3>SUMO Showa-cho Model</h3>
+            <p>富山県昭和町の道路ネットワークをSUMO上に構築し、信号パラメータと交通量を実環境に近づけました。</p>
+            <div class="tag-row" aria-label="関連技術">
+              <span class="tag">SUMO</span>
+              <span class="tag">Signal Timing</span>
+              <span class="tag">Simulation</span>
+            </div>
+          </article>
+          <article class="project-card">
+            <h3>Predictive Signal Control</h3>
+            <p>予測した待ち台数に応じて青時間を調整し、ギャップ感応制御との比較から制御効果を評価しました。</p>
+            <div class="tag-row" aria-label="関連技術">
+              <span class="tag">Control</span>
+              <span class="tag">Delay Time</span>
+              <span class="tag">Evaluation</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="skills" aria-labelledby="skills-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="skills-title">Skills</h2>
+          <p>交通工学、深層学習、シミュレーション実験をつなぐための技術領域です。</p>
+        </div>
+        <div class="skill-grid">
+          <article class="skill-card">
+            <h3>Machine Learning</h3>
+            <p>道路構造のような非格子データに対するグラフニューラルネットワークの応用。</p>
+            <ul class="skill-list">
+              <li>Graph Convolutional Networks</li>
+              <li>Deep Learning</li>
+              <li>ReLU</li>
+              <li>RMSE Evaluation</li>
+            </ul>
+          </article>
+          <article class="skill-card">
+            <h3>Traffic Simulation</h3>
+            <p>交通流、信号現示、オフセット、車両到着タイミングを扱う検証環境の構築。</p>
+            <ul class="skill-list">
+              <li>SUMO</li>
+              <li>Signal Parameters</li>
+              <li>Gap Actuated Control</li>
+              <li>Offset Design</li>
+            </ul>
+          </article>
+          <article class="skill-card">
+            <h3>Data & Experiment</h3>
+            <p>サイクル単位の交通データを用いた学習、検証、テスト分割と比較実験。</p>
+            <ul class="skill-list">
+              <li>Time-series Data</li>
+              <li>Model Validation</li>
+              <li>Comparative Analysis</li>
+              <li>Research Writing</li>
+            </ul>
+          </article>
+          <article class="skill-card">
+            <h3>Implementation</h3>
+            <p>研究成果を再現可能な形に整え、公開用のポートフォリオとして整理する実装力。</p>
+            <ul class="skill-list">
+              <li>Python</li>
+              <li>Git / GitHub</li>
+              <li>HTML</li>
+              <li>CSS</li>
+              <li>JavaScript</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="publications" aria-labelledby="publications-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="publications-title">Publications</h2>
+          <p>公開ポートフォリオに掲載する研究成果です。</p>
+        </div>
+        <article class="publication-card">
+          <span class="pub-kind">Bachelor's Thesis</span>
+          <div>
+            <h3>グラフ畳み込みネットワークを用いた赤信号待ち台数予測による信号制御手法の一検討</h3>
+            <p>
+              A Study on a Signal Control Approach Using Graph Convolutional Networks for Red Light Queue Length Prediction
+            </p>
+            <div class="pub-meta" aria-label="発表情報">
+              <span>日本大学 理工学部 応用情報工学科</span>
+              <span>2025年3月</span>
+              <span>指導教員: 高橋 聖 教授</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="contact" aria-labelledby="contact-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="contact-title">Contact</h2>
+          <p>研究内容、ポートフォリオ、共同研究に関する連絡先です。</p>
+        </div>
+        <div class="contact-layout">
+          <article class="contact-card">
+            <h3>GitHub</h3>
+            <p>研究ポートフォリオと公開コードの管理に利用しています。</p>
+            <a href="https://github.com/mitsunagac" target="_blank" rel="noreferrer">github.com/mitsunagac</a>
+          </article>
+          <article class="contact-card">
+            <h3>Portfolio</h3>
+            <p>研究内容とプロジェクトをまとめた公開ポートフォリオです。</p>
+            <a href="https://mitsunagac.github.io" target="_blank" rel="noreferrer">mitsunagac.github.io</a>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <span>© <span id="year"></span> Takuto Mitsunaga</span>
+      <span>Traffic Signal Control / Graph Neural Networks</span>
+    </div>
+  </footer>
+
+  <script>
+    const navToggle = document.querySelector(".nav-toggle");
+    const nav = document.querySelector(".site-nav");
+    const navLinks = Array.from(document.querySelectorAll(".site-nav a"));
+
+    navToggle.addEventListener("click", () => {
+      const isOpen = navToggle.getAttribute("aria-expanded") === "true";
+      navToggle.setAttribute("aria-expanded", String(!isOpen));
+      navToggle.setAttribute("aria-label", isOpen ? "メニューを開く" : "メニューを閉じる");
+      nav.classList.toggle("is-open", !isOpen);
+      document.body.classList.toggle("no-scroll", !isOpen);
+    });
+
+    navLinks.forEach((link) => {
+      link.addEventListener("click", () => {
+        navToggle.setAttribute("aria-expanded", "false");
+        navToggle.setAttribute("aria-label", "メニューを開く");
+        nav.classList.remove("is-open");
+        document.body.classList.remove("no-scroll");
+      });
+    });
+
+    const sections = Array.from(document.querySelectorAll("main section[id]"));
+    const linkById = new Map(navLinks.map((link) => [link.getAttribute("href").slice(1), link]));
+
+    const setActiveLink = (id) => {
+      navLinks.forEach((link) => link.removeAttribute("aria-current"));
+      const active = linkById.get(id);
+      if (active) {
+        active.setAttribute("aria-current", "true");
+      }
+    };
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+          if (visible[0]) {
+            setActiveLink(visible[0].target.id);
+          }
+        },
+        { rootMargin: "-35% 0px -50% 0px", threshold: [0.1, 0.35, 0.6] }
+      );
+      sections.forEach((section) => observer.observe(section));
+    }
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const canvas = document.getElementById("trafficCanvas");
+    const ctx = canvas.getContext("2d");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let animationFrame;
+    let time = 0;
+
+    const nodes = [
+      { id: "A", x: 0.16, y: 0.28, signal: "green" },
+      { id: "B", x: 0.38, y: 0.22, signal: "red" },
+      { id: "J", x: 0.58, y: 0.45, signal: "red", focus: true },
+      { id: "C", x: 0.78, y: 0.30, signal: "green" },
+      { id: "D", x: 0.30, y: 0.68, signal: "green" },
+      { id: "E", x: 0.55, y: 0.76, signal: "red" },
+      { id: "F", x: 0.82, y: 0.68, signal: "green" }
+    ];
+
+    const edges = [
+      ["A", "B"], ["B", "J"], ["J", "C"], ["A", "D"], ["D", "E"],
+      ["E", "F"], ["J", "E"], ["C", "F"], ["B", "D"]
+    ];
+
+    const cars = [
+      { edge: ["A", "B"], offset: 0.12, color: "#2d6a63" },
+      { edge: ["B", "J"], offset: 0.35, color: "#9d5b3f" },
+      { edge: ["J", "C"], offset: 0.64, color: "#357b64" },
+      { edge: ["D", "E"], offset: 0.08, color: "#2d6a63" },
+      { edge: ["J", "E"], offset: 0.82, color: "#b64b45" },
+      { edge: ["E", "F"], offset: 0.44, color: "#9d5b3f" }
+    ];
+
+    function resizeCanvas() {
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+      canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function point(node, width, height) {
+      return { x: node.x * width, y: node.y * height };
+    }
+
+    function nodeById(id) {
+      return nodes.find((node) => node.id === id);
+    }
+
+    function roundedRect(x, y, width, height, radius) {
+      const r = Math.min(radius, Math.abs(width) / 2, Math.abs(height) / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function drawRoad(from, to, width, height) {
+      const a = point(nodeById(from), width, height);
+      const b = point(nodeById(to), width, height);
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#d4ded8";
+      ctx.lineWidth = 15;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10, 12]);
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    function drawCar(car, width, height) {
+      const a = point(nodeById(car.edge[0]), width, height);
+      const b = point(nodeById(car.edge[1]), width, height);
+      const progress = reduceMotion.matches ? car.offset : (time * 0.00008 + car.offset) % 1;
+      const x = a.x + (b.x - a.x) * progress;
+      const y = a.y + (b.y - a.y) * progress;
+      const angle = Math.atan2(b.y - a.y, b.x - a.x);
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.fillStyle = car.color;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      roundedRect(-8, -5, 16, 10, 4);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawSignal(node, width, height) {
+      const p = point(node, width, height);
+      ctx.fillStyle = node.signal === "red" ? "#b64b45" : "#357b64";
+      ctx.beginPath();
+      ctx.arc(p.x + 19, p.y - 18, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function drawNode(node, width, height) {
+      const p = point(node, width, height);
+      if (node.focus) {
+        ctx.fillStyle = "rgba(45, 106, 99, 0.12)";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 42, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#2d6a63";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([7, 7]);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 34, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = node.focus ? "#174d48" : "#91a49b";
+      ctx.lineWidth = node.focus ? 3 : 2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, node.focus ? 17 : 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = node.focus ? "#174d48" : "#52625d";
+      ctx.font = "700 13px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(node.id, p.x, p.y + 0.5);
+      drawSignal(node, width, height);
+    }
+
+    function drawPrediction(width, height) {
+      const panelX = width * 0.08;
+      const panelY = height * 0.79;
+      const panelW = Math.min(280, width * 0.45);
+      const panelH = 66;
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+      ctx.strokeStyle = "#d7e0da";
+      ctx.lineWidth = 1;
+      roundedRect(panelX, panelY, panelW, panelH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#52625d";
+      ctx.font = "700 12px system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("Predicted red-light queue", panelX + 14, panelY + 21);
+
+      const values = [1.08, 1.19];
+      const labels = ["First half", "Second half"];
+      values.forEach((value, index) => {
+        const x = panelX + 14;
+        const y = panelY + 36 + index * 16;
+        ctx.fillStyle = index === 0 ? "#2d6a63" : "#9d5b3f";
+        ctx.fillRect(x, y, value * 54, 7);
+        ctx.fillStyle = "#1f2926";
+        ctx.font = "700 11px system-ui, sans-serif";
+        ctx.fillText(labels[index] + " RMSE " + value.toFixed(2), x + 72, y + 6);
+      });
+    }
+
+    function drawFrame(timestamp = 0) {
+      time = timestamp;
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#f8faf8";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = "#eef3ef";
+      for (let i = 0; i < 5; i += 1) {
+        ctx.fillRect(width * (0.1 + i * 0.18), height * 0.08, 1, height * 0.72);
+      }
+      for (let i = 0; i < 4; i += 1) {
+        ctx.fillRect(width * 0.08, height * (0.16 + i * 0.19), width * 0.82, 1);
+      }
+
+      edges.forEach((edge) => drawRoad(edge[0], edge[1], width, height));
+      cars.forEach((car) => drawCar(car, width, height));
+      nodes.forEach((node) => drawNode(node, width, height));
+      drawPrediction(width, height);
+
+      if (!reduceMotion.matches) {
+        animationFrame = requestAnimationFrame(drawFrame);
+      }
+    }
+
+    function startCanvas() {
+      cancelAnimationFrame(animationFrame);
+      resizeCanvas();
+      drawFrame(0);
+      if (!reduceMotion.matches) {
+        animationFrame = requestAnimationFrame(drawFrame);
+      }
+    }
+
+    startCanvas();
+    window.addEventListener("resize", startCanvas);
+    reduceMotion.addEventListener("change", startCanvas);
+  </script>
+</body>
+</html>

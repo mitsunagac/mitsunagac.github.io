@@ -340,18 +340,13 @@
       min-height: 54px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
       gap: 1rem;
       border-bottom: 1px solid var(--line);
       padding: 0.8rem 1rem;
       color: var(--muted);
       font-size: 0.82rem;
       font-weight: 800;
-    }
-
-    .visual-bar strong {
-      color: var(--ink);
-      font-size: 0.95rem;
     }
 
     #trafficCanvas {
@@ -795,7 +790,6 @@
 
         <figure class="traffic-visual" aria-labelledby="traffic-visual-title">
           <div class="visual-bar">
-            <strong>Showa-cho Traffic Model</strong>
             <span>SUMO × GCN</span>
           </div>
           <canvas id="trafficCanvas" width="720" height="495" aria-hidden="true"></canvas>
